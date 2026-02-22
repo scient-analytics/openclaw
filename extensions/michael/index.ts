@@ -2,6 +2,7 @@ import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import { OutlineClient } from "./src/outline-client.js";
 import { KBManager } from "./src/kb-manager.js";
 import { registerOutlineTools } from "./src/tools.js";
+import { createOutlineWebhookHandler } from "./src/webhook.js";
 
 const plugin = {
   id: "michael",
@@ -30,6 +31,23 @@ const plugin = {
 
     registerOutlineTools(api, kb);
     api.logger.info("Michael plugin: Outline tools registered");
+
+    const webhookSecret = (api.pluginConfig as Record<string, unknown>)?.outlineWebhookSecret as
+      | string
+      | undefined;
+    if (webhookSecret) {
+      const handler = createOutlineWebhookHandler({
+        secret: webhookSecret,
+        onEvent: (event, payload) => {
+          const model = payload.payload.model as { title?: string };
+          const title = model.title ?? "unknown";
+          api.logger.info(`Outline webhook: ${event} — "${title}"`);
+        },
+      });
+
+      api.registerHttpRoute({ path: "/outline-webhook", handler });
+      api.logger.info("Michael plugin: Outline webhook registered at /outline-webhook");
+    }
   },
 };
 
