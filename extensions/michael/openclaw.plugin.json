@@ -1,0 +1,23 @@
+{
+  "id": "michael",
+  "name": "Michael",
+  "description": "Outline wiki KB + coordinator agent",
+  "configSchema": {
+    "type": "object",
+    "required": ["outlineApiUrl", "outlineApiKey"],
+    "properties": {
+      "outlineApiUrl": {
+        "type": "string",
+        "description": "Outline API base URL (e.g. https://outline.example.com/api)"
+      },
+      "outlineApiKey": {
+        "type": "string",
+        "description": "Outline API key"
+      },
+      "outlineWebhookSecret": {
+        "type": "string",
+        "description": "Secret for verifying Outline webhook signatures (optional)"
+      }
+    }
+  }
+}
