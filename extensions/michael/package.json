@@ -1,0 +1,15 @@
+{
+  "name": "@openclaw/michael",
+  "version": "0.1.0",
+  "description": "Outline wiki KB + coordinator agent for OpenClaw",
+  "type": "module",
+  "dependencies": {
+    "@sinclair/typebox": "0.34.48"
+  },
+  "devDependencies": {
+    "openclaw": "workspace:*"
+  },
+  "openclaw": {
+    "extensions": ["./index.ts"]
+  }
+}
