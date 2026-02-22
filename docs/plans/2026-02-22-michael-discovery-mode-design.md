@@ -66,9 +66,11 @@ Even in steady state, detecting a new team member, major strategy change, or sig
 
 ## Implementation
 
-No code changes. Entire implementation is SKILL.md prompt engineering. The existing tools, heartbeat, and webhook infrastructure support all described behaviors.
+No code changes. Entire implementation is SOUL.md prompt engineering. The existing tools, heartbeat, and webhook infrastructure support all described behaviors.
+
+SOUL.md (always injected into the system prompt) is the correct home for Michael's persona and discovery mode — not SKILL.md (which is an on-demand invocable command).
 
 ## Files Changed
 
-- `extensions/michael/skills/michael/SKILL.md` — Added Discovery Mode section
-- `extensions/michael/openclaw.plugin.json` — Added plugin manifest (needed for gateway loading)
+- `~/.openclaw/workspace/SOUL.md` — Michael's persona and Discovery Mode instructions
+- `extensions/michael/openclaw.plugin.json` — Plugin manifest (registers tools and webhook)
