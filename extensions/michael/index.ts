@@ -4,10 +4,49 @@ import { KBManager } from "./src/kb-manager.js";
 import { registerOutlineTools } from "./src/tools.js";
 import { createOutlineWebhookHandler } from "./src/webhook.js";
 
+const michaelConfigSchema = {
+  safeParse(value: unknown) {
+    if (!value || typeof value !== "object") {
+      return { success: false as const, error: { issues: [{ path: [], message: "config required" }] } };
+    }
+    const v = value as Record<string, unknown>;
+    if (!v.outlineApiUrl || typeof v.outlineApiUrl !== "string") {
+      return {
+        success: false as const,
+        error: { issues: [{ path: ["outlineApiUrl"], message: "required string" }] },
+      };
+    }
+    if (!v.outlineApiKey || typeof v.outlineApiKey !== "string") {
+      return {
+        success: false as const,
+        error: { issues: [{ path: ["outlineApiKey"], message: "required string" }] },
+      };
+    }
+    // outlineWebhookSecret is optional
+    return { success: true as const, data: value };
+  },
+  jsonSchema: {
+    type: "object" as const,
+    required: ["outlineApiUrl", "outlineApiKey"],
+    properties: {
+      outlineApiUrl: {
+        type: "string",
+        description: "Outline API base URL (e.g. https://outline.example.com/api)",
+      },
+      outlineApiKey: { type: "string", description: "Outline API key" },
+      outlineWebhookSecret: {
+        type: "string",
+        description: "Secret for verifying Outline webhook signatures (optional)",
+      },
+    },
+  },
+};
+
 const plugin = {
   id: "michael",
   name: "Michael",
   description: "Outline wiki KB + coordinator agent",
+  configSchema: michaelConfigSchema,
   register(api: OpenClawPluginApi) {
     const outlineUrl = (api.pluginConfig as Record<string, unknown>)?.outlineApiUrl as
       | string
