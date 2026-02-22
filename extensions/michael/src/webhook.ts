@@ -15,6 +15,7 @@ export interface OutlineWebhookPayload {
 
 export function createOutlineWebhookHandler(opts: {
   secret: string;
+  ignoreActorId?: string;
   onEvent: (event: string, payload: OutlineWebhookPayload) => void;
 }) {
   return async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
@@ -36,6 +37,14 @@ export function createOutlineWebhookHandler(opts: {
 
     try {
       const payload = JSON.parse(body) as OutlineWebhookPayload;
+
+      // Skip events caused by our own API key (prevents feedback loops)
+      if (opts.ignoreActorId && payload.actorId === opts.ignoreActorId) {
+        res.statusCode = 200;
+        res.end("ok (self)");
+        return;
+      }
+
       opts.onEvent(payload.event, payload);
       res.statusCode = 200;
       res.end("ok");

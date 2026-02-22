@@ -1,13 +1,16 @@
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
-import { OutlineClient } from "./src/outline-client.js";
 import { KBManager } from "./src/kb-manager.js";
+import { OutlineClient } from "./src/outline-client.js";
 import { registerOutlineTools } from "./src/tools.js";
 import { createOutlineWebhookHandler } from "./src/webhook.js";
 
 const michaelConfigSchema = {
   safeParse(value: unknown) {
     if (!value || typeof value !== "object") {
-      return { success: false as const, error: { issues: [{ path: [], message: "config required" }] } };
+      return {
+        success: false as const,
+        error: { issues: [{ path: [], message: "config required" }] },
+      };
     }
     const v = value as Record<string, unknown>;
     if (!v.outlineApiUrl || typeof v.outlineApiUrl !== "string") {
@@ -42,6 +45,21 @@ const michaelConfigSchema = {
   },
 };
 
+function formatOutlineEvent(event: string, title: string): string | null {
+  switch (event) {
+    case "documents.create":
+      return `[Outline] New document created: "${title}". Review for duplicates and naming conventions.`;
+    case "documents.update":
+      return `[Outline] Document updated: "${title}". Check if cross-references or connections need updating.`;
+    case "documents.delete":
+      return `[Outline] Document deleted: "${title}". Verify this was intentional and update any references.`;
+    case "documents.move":
+      return `[Outline] Document moved: "${title}". Verify it is in the correct collection.`;
+    default:
+      return null;
+  }
+}
+
 const plugin = {
   id: "michael",
   name: "Michael",
@@ -56,9 +74,7 @@ const plugin = {
       | undefined;
 
     if (!outlineUrl || !outlineKey) {
-      api.logger.warn(
-        "Michael plugin: missing outlineApiUrl or outlineApiKey in plugin config",
-      );
+      api.logger.warn("Michael plugin: missing outlineApiUrl or outlineApiKey in plugin config");
       return;
     }
 
@@ -75,12 +91,37 @@ const plugin = {
       | string
       | undefined;
     if (webhookSecret) {
+      const enqueue = api.runtime.system.enqueueSystemEvent;
+      const sessionKey = `agent:michael:main`;
+
+      // Resolve our own Outline user ID to filter self-caused events
+      let selfActorId: string | undefined;
+      client
+        .getAuthInfo()
+        .then((info) => {
+          selfActorId = info.user.id;
+          api.logger.info(`Michael plugin: Outline user ID resolved (${selfActorId})`);
+        })
+        .catch((err) => api.logger.warn(`Could not resolve Outline user ID: ${err}`));
+
       const handler = createOutlineWebhookHandler({
         secret: webhookSecret,
+        get ignoreActorId() {
+          return selfActorId;
+        },
         onEvent: (event, payload) => {
-          const model = payload.payload.model as { title?: string };
+          const model = payload.payload.model as {
+            title?: string;
+            collectionId?: string;
+          };
           const title = model.title ?? "unknown";
           api.logger.info(`Outline webhook: ${event} — "${title}"`);
+
+          // Queue a system event so Michael sees the change on next heartbeat
+          const description = formatOutlineEvent(event, title);
+          if (description) {
+            enqueue(description, { sessionKey });
+          }
         },
       });
 

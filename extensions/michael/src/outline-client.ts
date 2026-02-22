@@ -1,8 +1,4 @@
-import type {
-  OutlineCollection,
-  OutlineDocument,
-  OutlineSearchResult,
-} from "./outline-types.js";
+import type { OutlineCollection, OutlineDocument, OutlineSearchResult } from "./outline-types.js";
 
 export class OutlineClient {
   constructor(
@@ -14,7 +10,7 @@ export class OutlineClient {
     const res = await fetch(`${this.baseUrl}/${endpoint}`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
@@ -25,7 +21,7 @@ export class OutlineClient {
       throw new Error(`Outline API error ${res.status}: ${text}`);
     }
 
-    const json = await res.json() as { ok: boolean; data: T };
+    const json = (await res.json()) as { ok: boolean; data: T };
     if (!json.ok) {
       throw new Error(`Outline API returned ok=false`);
     }
@@ -68,12 +64,15 @@ export class OutlineClient {
     return this.request<OutlineDocument>("documents.info", { id });
   }
 
-  async updateDocument(id: string, params: {
-    title?: string;
-    text?: string;
-    append?: boolean;
-    publish?: boolean;
-  }): Promise<OutlineDocument> {
+  async updateDocument(
+    id: string,
+    params: {
+      title?: string;
+      text?: string;
+      append?: boolean;
+      publish?: boolean;
+    },
+  ): Promise<OutlineDocument> {
     return this.request<OutlineDocument>("documents.update", { id, ...params });
   }
 
@@ -85,11 +84,18 @@ export class OutlineClient {
     await this.request("documents.delete", { id });
   }
 
-  async search(query: string, options?: {
-    collectionId?: string;
-    limit?: number;
-    offset?: number;
-  }): Promise<OutlineSearchResult[]> {
+  async getAuthInfo(): Promise<{ user: { id: string; name: string } }> {
+    return this.request<{ user: { id: string; name: string } }>("auth.info", {});
+  }
+
+  async search(
+    query: string,
+    options?: {
+      collectionId?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<OutlineSearchResult[]> {
     return this.request<OutlineSearchResult[]>("documents.search", {
       query,
       ...options,
