@@ -2,11 +2,16 @@ import { OutlineClient } from "./outline-client.js";
 import type { OutlineDocument, OutlineSearchResult } from "./outline-types.js";
 
 export const DEFAULT_COLLECTIONS = {
-  organization: { name: "Organization", description: "Company info, team, decisions", icon: "\u{1F3E2}" },
+  organization: {
+    name: "Organization",
+    description: "Company info, team, decisions",
+    icon: "\u{1F3E2}",
+  },
   okrs: { name: "OKRs", description: "Objectives and key results", icon: "\u{1F3AF}" },
   brain: { name: "Brain", description: "Agent learnings, open questions", icon: "\u{1F9E0}" },
   projects: { name: "Projects", description: "Active projects, backlog", icon: "\u{1F4CB}" },
   sources: { name: "Sources", description: "External sources to watch", icon: "\u{1F517}" },
+  skills: { name: "Skills", description: "Shared team skills and patterns", icon: "\u{1F9E9}" },
   workstreams: { name: "Workstreams", description: "Per-person work logs", icon: "\u{1F4CA}" },
   digest: { name: "Digest", description: "Daily/weekly synthesis", icon: "\u{1F4F0}" },
 } as const;
