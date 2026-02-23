@@ -1,5 +1,8 @@
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import { KBManager } from "./src/kb-manager.js";
+import { createMcpHandler } from "./src/mcp/handler.js";
+import { createToolCallHandler } from "./src/mcp/tool-handlers.js";
+import { MCP_TOOLS } from "./src/mcp/tools.js";
 import { OutlineClient } from "./src/outline-client.js";
 import { registerOutlineTools } from "./src/tools.js";
 import { createOutlineWebhookHandler } from "./src/webhook.js";
@@ -86,6 +89,38 @@ const plugin = {
 
     registerOutlineTools(api, kb);
     api.logger.info("Michael plugin: Outline tools registered");
+
+    // MCP Streamable HTTP endpoint
+    const gatewayAuth = (api.config as { gateway?: { auth?: { token?: string } } })?.gateway?.auth;
+    const gatewayToken = gatewayAuth?.token;
+    if (gatewayToken) {
+      const enqueue = api.runtime.system.enqueueSystemEvent;
+      const mcpSessionKey = "agent:michael:main";
+
+      const toolCallHandler = createToolCallHandler({
+        kb,
+        sendToAgent: async (message: string) => {
+          try {
+            enqueue(message, { sessionKey: mcpSessionKey });
+            return { ok: true, runId: `mcp-${Date.now()}` };
+          } catch (err) {
+            api.logger.warn(`MCP sendToAgent failed: ${err}`);
+            return { ok: false };
+          }
+        },
+      });
+
+      const mcpHandler = createMcpHandler({
+        authToken: gatewayToken,
+        tools: MCP_TOOLS,
+        onToolCall: toolCallHandler,
+      });
+
+      api.registerHttpRoute({ path: "/mcp", handler: mcpHandler });
+      api.logger.info("Michael plugin: MCP endpoint registered at /mcp");
+    } else {
+      api.logger.warn("Michael plugin: no gateway auth token, MCP endpoint not registered");
+    }
 
     const webhookSecret = (api.pluginConfig as Record<string, unknown>)?.outlineWebhookSecret as
       | string
