@@ -11,10 +11,14 @@ export type McpToolResult = {
   isError?: boolean;
 };
 
+export type McpToolContext = {
+  username?: string;
+};
+
 export type McpHandlerOptions = {
   authToken: string;
   tools: McpToolDefinition[];
-  onToolCall: (name: string, args: unknown) => Promise<McpToolResult>;
+  onToolCall: (name: string, args: unknown, context: McpToolContext) => Promise<McpToolResult>;
 };
 
 type JsonRpcRequest = {
@@ -92,7 +96,8 @@ export function createMcpHandler(opts: McpHandlerOptions) {
           break;
         }
         try {
-          const result = await opts.onToolCall(params.name, params.arguments ?? {});
+          const username = req.headers["x-user"] as string | undefined;
+          const result = await opts.onToolCall(params.name, params.arguments ?? {}, { username });
           sendJsonRpc(res, { id: rpc.id, result });
         } catch (err) {
           sendJsonRpc(res, {

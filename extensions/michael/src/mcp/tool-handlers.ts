@@ -1,15 +1,15 @@
 import type { KBManager } from "../kb-manager.js";
-import type { McpToolResult } from "./handler.js";
+import type { McpToolContext, McpToolResult } from "./handler.js";
 
 export type ToolCallHandlerDeps = {
   kb: KBManager;
-  sendToAgent: (message: string) => Promise<{ ok: boolean; runId?: string }>;
+  sendToAgent: (message: string, username?: string) => Promise<{ ok: boolean; runId?: string }>;
 };
 
 export function createToolCallHandler(deps: ToolCallHandlerDeps) {
   const { kb, sendToAgent } = deps;
 
-  return async (name: string, args: unknown): Promise<McpToolResult> => {
+  return async (name: string, args: unknown, context: McpToolContext): Promise<McpToolResult> => {
     const params = args as Record<string, string>;
 
     switch (name) {
@@ -51,7 +51,11 @@ export function createToolCallHandler(deps: ToolCallHandlerDeps) {
       }
 
       case "michael_sync": {
-        const result = await sendToAgent(`[Claude Code Sync]\n\n${params.payload}`);
+        const prefix = context.username ? `[from: ${context.username}] ` : "";
+        const result = await sendToAgent(
+          `${prefix}[Claude Code Sync]\n\n${params.payload}`,
+          context.username,
+        );
         if (!result.ok) {
           return error("Failed to send sync to Michael.");
         }
@@ -59,7 +63,7 @@ export function createToolCallHandler(deps: ToolCallHandlerDeps) {
       }
 
       case "michael_ask": {
-        const result = await sendToAgent(params.question);
+        const result = await sendToAgent(params.question, context.username);
         if (!result.ok) {
           return error("Failed to send question to Michael.");
         }

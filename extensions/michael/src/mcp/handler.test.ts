@@ -147,6 +147,68 @@ describe("MCP Handler", () => {
     assert.strictEqual(parsed.result.content[0].text, "echo: hello");
   });
 
+  it("passes X-User header to onToolCall context", async () => {
+    let capturedContext: { username?: string } | undefined;
+    const toolHandler = createMcpHandler({
+      authToken: "test-token",
+      tools: [
+        {
+          name: "michael_echo",
+          description: "Echo",
+          inputSchema: { type: "object", properties: {} },
+        },
+      ],
+      onToolCall: async (_name, _args, context) => {
+        capturedContext = context;
+        return { content: [{ type: "text", text: "ok" }] };
+      },
+    });
+    const body = JSON.stringify({
+      jsonrpc: "2.0",
+      id: 10,
+      method: "tools/call",
+      params: { name: "michael_echo", arguments: {} },
+    });
+    const res = mockRes();
+    await toolHandler(
+      mockReq("POST", body, { authorization: "Bearer test-token", "x-user": "matt" }),
+      res as unknown as ServerResponse,
+    );
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(capturedContext?.username, "matt");
+  });
+
+  it("passes undefined username when X-User header is missing", async () => {
+    let capturedContext: { username?: string } | undefined;
+    const toolHandler = createMcpHandler({
+      authToken: "test-token",
+      tools: [
+        {
+          name: "michael_echo",
+          description: "Echo",
+          inputSchema: { type: "object", properties: {} },
+        },
+      ],
+      onToolCall: async (_name, _args, context) => {
+        capturedContext = context;
+        return { content: [{ type: "text", text: "ok" }] };
+      },
+    });
+    const body = JSON.stringify({
+      jsonrpc: "2.0",
+      id: 11,
+      method: "tools/call",
+      params: { name: "michael_echo", arguments: {} },
+    });
+    const res = mockRes();
+    await toolHandler(
+      mockReq("POST", body, { authorization: "Bearer test-token" }),
+      res as unknown as ServerResponse,
+    );
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(capturedContext?.username, undefined);
+  });
+
   it("returns error for unknown method", async () => {
     const body = JSON.stringify({ jsonrpc: "2.0", id: 4, method: "unknown/method" });
     const res = mockRes();

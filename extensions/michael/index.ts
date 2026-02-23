@@ -95,13 +95,13 @@ const plugin = {
     const gatewayToken = gatewayAuth?.token;
     if (gatewayToken) {
       const enqueue = api.runtime.system.enqueueSystemEvent;
-      const mcpSessionKey = "agent:michael:main";
 
       const toolCallHandler = createToolCallHandler({
         kb,
-        sendToAgent: async (message: string) => {
+        sendToAgent: async (message: string, username?: string) => {
+          const sessionKey = username ? `person:${username.toLowerCase()}` : "agent:michael:main";
           try {
-            enqueue(message, { sessionKey: mcpSessionKey });
+            enqueue(message, { sessionKey });
             return { ok: true, runId: `mcp-${Date.now()}` };
           } catch (err) {
             api.logger.warn(`MCP sendToAgent failed: ${err}`);

@@ -36,62 +36,85 @@ function createMockKb() {
 describe("MCP Tool Handlers", () => {
   let handler: ReturnType<typeof createToolCallHandler>;
   let lastHookPayload: string | undefined;
+  let lastUsername: string | undefined;
 
   beforeEach(() => {
     lastHookPayload = undefined;
+    lastUsername = undefined;
     handler = createToolCallHandler({
       kb: createMockKb() as never,
-      sendToAgent: async (message: string) => {
+      sendToAgent: async (message: string, username?: string) => {
         lastHookPayload = message;
+        lastUsername = username;
         return { ok: true, runId: "run-1" };
       },
     });
   });
 
   it("michael_list_skills returns skill names", async () => {
-    const result = await handler("michael_list_skills", {});
+    const result = await handler("michael_list_skills", {}, {});
     const text = result.content[0].text;
     assert.ok(text.includes("sync-to-michael/sync"));
     assert.ok(text.includes("debugging"));
   });
 
   it("michael_pull_skill returns skill content", async () => {
-    const result = await handler("michael_pull_skill", { name: "sync-to-michael/sync" });
+    const result = await handler("michael_pull_skill", { name: "sync-to-michael/sync" }, {});
     const text = result.content[0].text;
     assert.ok(text.includes("# Sync Skill"));
   });
 
   it("michael_pull_skill returns error for unknown skill", async () => {
-    const result = await handler("michael_pull_skill", { name: "nonexistent" });
+    const result = await handler("michael_pull_skill", { name: "nonexistent" }, {});
     assert.ok(result.isError);
   });
 
   it("michael_list_agents returns agent names", async () => {
-    const result = await handler("michael_list_agents", {});
+    const result = await handler("michael_list_agents", {}, {});
     const text = result.content[0].text;
     assert.ok(text.includes("michael"));
   });
 
   it("michael_sync sends payload to agent", async () => {
-    const result = await handler("michael_sync", { payload: "test sync data" });
+    const result = await handler("michael_sync", { payload: "test sync data" }, {});
     assert.ok(lastHookPayload?.includes("test sync data"));
     assert.ok(!result.isError);
   });
 
   it("michael_ask sends question to agent", async () => {
-    const result = await handler("michael_ask", { question: "What projects are active?" });
+    const result = await handler("michael_ask", { question: "What projects are active?" }, {});
     assert.ok(lastHookPayload?.includes("What projects are active?"));
     assert.ok(!result.isError);
   });
 
   it("michael_pull_agent returns agent content", async () => {
-    const result = await handler("michael_pull_agent", { name: "michael" });
+    const result = await handler("michael_pull_agent", { name: "michael" }, {});
     const text = result.content[0].text;
     assert.ok(text.includes("# Michael Agent Config"));
   });
 
   it("unknown tool returns error", async () => {
-    const result = await handler("nonexistent_tool", {});
+    const result = await handler("nonexistent_tool", {}, {});
     assert.ok(result.isError);
+  });
+
+  it("michael_sync passes username to sendToAgent", async () => {
+    const result = await handler("michael_sync", { payload: "data" }, { username: "matt" });
+    assert.strictEqual(lastUsername, "matt");
+    assert.ok(lastHookPayload?.includes("[from: matt]"));
+    assert.ok(!result.isError);
+  });
+
+  it("michael_ask passes username to sendToAgent", async () => {
+    const result = await handler("michael_ask", { question: "hello?" }, { username: "sarah" });
+    assert.strictEqual(lastUsername, "sarah");
+    assert.ok(!result.isError);
+  });
+
+  it("michael_sync works without username", async () => {
+    const result = await handler("michael_sync", { payload: "data" }, {});
+    assert.strictEqual(lastUsername, undefined);
+    assert.ok(!lastHookPayload?.includes("[from:"));
+    assert.ok(!result.isError);
   });
 });
