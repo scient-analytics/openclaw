@@ -91,18 +91,36 @@ const plugin = {
     api.logger.info("Michael plugin: Outline tools registered");
 
     // MCP Streamable HTTP endpoint
-    const gatewayAuth = (api.config as { gateway?: { auth?: { token?: string } } })?.gateway?.auth;
-    const gatewayToken = gatewayAuth?.token;
+    const fullCfg = api.config as {
+      gateway?: { port?: number; auth?: { token?: string } };
+      hooks?: { token?: string };
+    };
+    const gatewayToken = fullCfg.gateway?.auth?.token;
     if (gatewayToken) {
-      const enqueue = api.runtime.system.enqueueSystemEvent;
+      const hooksToken = fullCfg.hooks?.token;
+      const gatewayPort = fullCfg.gateway?.port ?? 18789;
 
       const toolCallHandler = createToolCallHandler({
         kb,
         sendToAgent: async (message: string, username?: string) => {
-          const sessionKey = username ? `person:${username.toLowerCase()}` : "agent:michael:main";
+          const sessionKey = username ? `person:${username.toLowerCase()}` : undefined;
+          const name = username ?? "MCP";
           try {
-            enqueue(message, { sessionKey });
-            return { ok: true, runId: `mcp-${Date.now()}` };
+            const res = await fetch(`http://127.0.0.1:${gatewayPort}/hooks/agent`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(hooksToken ? { Authorization: `Bearer ${hooksToken}` } : {}),
+              },
+              body: JSON.stringify({
+                message,
+                name,
+                deliver: false,
+                ...(sessionKey ? { sessionKey } : {}),
+              }),
+            });
+            const data = (await res.json()) as { ok: boolean; runId?: string };
+            return data;
           } catch (err) {
             api.logger.warn(`MCP sendToAgent failed: ${err}`);
             return { ok: false };
