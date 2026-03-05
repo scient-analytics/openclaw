@@ -2,6 +2,7 @@
   "id": "michael",
   "name": "Michael",
   "description": "Outline wiki KB + coordinator agent",
+  "skills": ["./skills"],
   "configSchema": {
     "type": "object",
     "required": ["outlineApiUrl", "outlineApiKey"],

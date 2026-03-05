@@ -4,6 +4,7 @@ import { createMcpHandler } from "./src/mcp/handler.js";
 import { createToolCallHandler } from "./src/mcp/tool-handlers.js";
 import { MCP_TOOLS } from "./src/mcp/tools.js";
 import { OutlineClient } from "./src/outline-client.js";
+import { registerNotifyTool } from "./src/notify.js";
 import { registerOutlineTools } from "./src/tools.js";
 import { createOutlineWebhookHandler } from "./src/webhook.js";
 
@@ -90,11 +91,29 @@ const plugin = {
     registerOutlineTools(api, kb);
     api.logger.info("Michael plugin: Outline tools registered");
 
-    // MCP Streamable HTTP endpoint
+    // Notify tool — hardened message wrapper with allowlist/blocklist/rate limiting
     const fullCfg = api.config as {
       gateway?: { port?: number; auth?: { token?: string } };
       hooks?: { token?: string };
     };
+    const gatewayPort = fullCfg.gateway?.port ?? 18789;
+    const hooksToken = fullCfg.hooks?.token;
+    const notifyCfg = (api.pluginConfig as Record<string, unknown>)?.notify as
+      | Record<string, unknown>
+      | undefined;
+
+    registerNotifyTool(api, {
+      channel: (notifyCfg?.channel as string) ?? process.env.MICHAEL_NOTIFY_CHANNEL ?? "msteams",
+      teamChannelId: (notifyCfg?.teamChannelId as string) ?? "",
+      allowDm: Array.isArray(notifyCfg?.allowDm) ? (notifyCfg.allowDm as string[]) : [],
+      blockDm: Array.isArray(notifyCfg?.blockDm) ? (notifyCfg.blockDm as string[]) : [],
+      maxDmPerPersonPerDay: (notifyCfg?.maxDmPerPersonPerDay as number) ?? 1,
+      gatewayPort,
+      hooksToken,
+    });
+    api.logger.info("Michael plugin: Notify tool registered");
+
+    // MCP Streamable HTTP endpoint
     const gatewayToken = fullCfg.gateway?.auth?.token;
     if (gatewayToken) {
       const hooksToken = fullCfg.hooks?.token;
