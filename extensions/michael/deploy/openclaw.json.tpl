@@ -1,4 +1,9 @@
 {
+  "gateway": {
+    "controlUi": {
+      "allowedOrigins": ["${OPENCLAW_ALLOWED_ORIGIN}"]
+    }
+  },
   "channels": {
     "msteams": {
       "appId": "${AZURE_BOT_APP_ID}",

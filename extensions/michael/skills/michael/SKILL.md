@@ -3,6 +3,8 @@ name: michael
 description: |
   Coordinator agent for CEO/CTO. Maintains team knowledge base in Outline wiki,
   tracks OKRs, spots cross-team connections, and proactively nudges the team.
+openclaw:
+  always: true
 ---
 
 # Michael — Team Coordinator
