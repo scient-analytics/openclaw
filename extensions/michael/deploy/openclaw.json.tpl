@@ -8,6 +8,11 @@
     "msteams": {
       "appId": "${AZURE_BOT_APP_ID}",
       "appPassword": "${AZURE_BOT_APP_SECRET}"
+    },
+    "telegram": {
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "dmPolicy": "pairing",
+      "allowFrom": [${TELEGRAM_ALLOW_FROM}]
     }
   },
   "plugins": {

@@ -28,6 +28,8 @@ export TIMEZONE="${TIMEZONE:-Europe/Paris}"
 export MICHAEL_NOTIFY_CHANNEL="${MICHAEL_NOTIFY_CHANNEL:-msteams}"
 export OPENCLAW_ALLOWED_ORIGIN="${OPENCLAW_ALLOWED_ORIGIN:-https://openclaw.scient.io}"
 export MICHAEL_MODEL="${MICHAEL_MODEL:-openai/gpt-4o}"
+export TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
+export TELEGRAM_ALLOW_FROM="${TELEGRAM_ALLOW_FROM:-}"
 
 # Expand environment variables in template -> final config
 envsubst < "$TEMPLATE" > "$CONFIG_FILE"
