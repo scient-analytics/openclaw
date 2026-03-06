@@ -7,11 +7,15 @@ TEMPLATE="/app/extensions/michael/deploy/openclaw.json.tpl"
 
 # Create config and workspace directories
 mkdir -p "$CONFIG_DIR"
-WORKSPACE_DIR="${CONFIG_DIR}/workspace"
-mkdir -p "$WORKSPACE_DIR"
+# Default workspace (for default agent)
+DEFAULT_WS="${CONFIG_DIR}/workspace"
+# Named agent workspace (OpenClaw uses workspace-{agentId} for non-default agents)
+MICHAEL_WS="${CONFIG_DIR}/workspace-michael"
+mkdir -p "$DEFAULT_WS" "$MICHAEL_WS"
 
-# Copy workspace bootstrap files (SOUL.md, etc.) into the agent workspace
-cp -n /app/extensions/michael/workspace/* "$WORKSPACE_DIR/" 2>/dev/null || true
+# Copy workspace bootstrap files (SOUL.md, etc.) into both workspaces
+cp -f /app/extensions/michael/workspace/* "$DEFAULT_WS/" 2>/dev/null || true
+cp -f /app/extensions/michael/workspace/* "$MICHAEL_WS/" 2>/dev/null || true
 
 # Set defaults for optional variables (envsubst doesn't handle ${VAR:-default} syntax)
 export AZURE_BOT_APP_ID="${AZURE_BOT_APP_ID:-}"
