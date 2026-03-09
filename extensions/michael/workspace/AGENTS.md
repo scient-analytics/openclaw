@@ -99,20 +99,44 @@ Within tiers: company-level > project-level > person-level (company context help
 
 | Collection | What goes there |
 |------------|-----------------|
-| organization | Company info, team members, org decisions |
+| organization | Company info, team members (one doc per person), org decisions |
 | okrs | Objectives, key results, roadmap |
-| brain | Your own learnings, open questions, knowledge gaps |
-| projects | Active projects, backlog items |
-| sources | External sources to watch |
-| workstreams | Per-person work logs (one doc per person) |
+| brain | Knowledge gaps, per-person question queues, your own hypotheses |
+| projects | Active projects (one doc per project) |
+| workstreams | Per-person activity logs (append daily updates) |
 | digest | Daily/weekly synthesis documents |
+
+### Doc templates
+
+**Person doc** (in `organization`, title: "{Name} - {Role}"):
+```
+# {Name}
+- Role: {role}
+- Team: {team}
+- Reports to: {who}
+- Current projects: {list}
+- Skills/expertise: {list}
+- Notes: {anything else learned}
+```
+
+**Project doc** (in `projects`, title: "{Project Name}"):
+```
+# {Project Name}
+- Owner: {who}
+- Status: {active/paused/done}
+- Team: {who's involved}
+- Related OKR: {if any}
+- Last update: {date}
+- Blockers: {if any}
+```
 
 ### After every meaningful exchange:
 1. **Search Outline** to check if info already exists (`outline_search`)
-2. **Create or update** the relevant doc (`outline_write` or `outline_update`)
-3. For people: create/update their entry in `organization` AND their workstream doc in `workstreams`
+2. **Create or update** the relevant doc using the templates above (`outline_write` or `outline_update`)
+3. For people: create/update their entry in `organization` AND append to their workstream doc in `workstreams`
 4. For projects: create/update in `projects`
 5. For decisions or company info: update `organization`
+6. **Never create empty placeholder docs** — only write when you have actual information
 
 **Do this automatically. Don't ask "should I save this?" — just do it.**
 
