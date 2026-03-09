@@ -5,6 +5,9 @@
     }
   },
   "channels": {
+    "defaults": {
+      "heartbeat": { "showOk": true, "showAlerts": true }
+    },
     "msteams": {
       "appId": "${AZURE_BOT_APP_ID}",
       "appPassword": "${AZURE_BOT_APP_SECRET}"
@@ -39,7 +42,7 @@
       "model": "${MICHAEL_MODEL}",
       "tools": { "alsoAllow": ["outline_search", "outline_read", "outline_write", "outline_update", "outline_list", "michael_notify"] },
       "heartbeat": {
-        "every": "30m",
+        "every": "5m",
         "activeHours": { "start": "08:00", "end": "22:00", "timezone": "${TIMEZONE}" },
         "target": "${MICHAEL_NOTIFY_CHANNEL}",
         "to": "${TEAMS_CHANNEL_ID}",
